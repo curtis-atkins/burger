@@ -1,11 +1,6 @@
-const server = require("../server.js");
-
 // Dependencies
 const mysql = require("mysql");
 
-const app = server.express();
-//connect to localhost port
-const PORT = process.env.PORT || 3000;
 // MySQL DB Connection Information (remember to change this with our specific credentials)
 const connection = mysql.createConnection({
   host: "localhost",
@@ -23,9 +18,4 @@ connection.connect(function(err) {
   console.log("connected as id " + connection.threadId);
 });
 
-
-app.listen(PORT, function(){
-  console.log("Listening on PORT " + PORT);
-});
-
-module.exports = app;
+module.exports = connection;

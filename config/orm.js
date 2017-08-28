@@ -1,56 +1,96 @@
-const burgersDatabase = require("./connection.js");
+const connection = require("../config/connection.js");
 
+// Helper function for SQL syntax.
+function printQuestionMarks(num) {
+  var arr = [];
 
+  for (var i = 0; i < num; i++) {
+    arr.push("?");
+  }
 
-//function that displays all burgers in the database
-module.exports = function(selectAll){
-app.get("/", function(req, res) {
-  connection.query("SELECT * FROM burgers;", function(err, data) {
-    if (err) throw err;
-
-    // Test it
-    // console.log('The solution is: ', data);
-
-    // Test it
-    // res.send(data);
-
-    res.render("index", { tasks: data });
-  });
-});
+  return arr.toString();
 }
 
-//function that allows user to  add a new burger to the page
-module.exports = function(insertOne){
-	app.post("/", function(req, res) {
-  connection.query("INSERT INTO burgers (burger) VALUES (?)", 
-  	[req.body.task], function(err, data) {
-    if (err) throw err;
+// Helper function for SQL syntax.
+function objToSql(ob) {
+  var arr = [];
 
-    // Test it
-    // console.log('The solution is: ', data);
+  for (var key in ob) {
+    if (Object.hasOwnProperty.call(ob, key)) {
+      arr.push(key + "=" + ob[key]);
+    }
+  }
 
-    // Test it
-    // res.send(data);
-
-    res.redirect("/");
-  });
-});
+  return arr.toString();
 }
 
 
-//function that allows user to change a given burger so that it has been devoured
-module.exports = function(updateOne){
-	app.put("/", function(req, res) {
-  connection.query("UPDATE burgers;", function(err, data) {
-    if (err) throw err;
+// Object for all our SQL statement functions.
+const orm = {
+  // function used to show all burger choices
+  selectAll: function(tableInput, cb) {
+    var queryString = "SELECT * FROM " + tableInput + ";";
+    connection.query(queryString, function(err, result) {
+      if (err) {
+        throw err;
+      }
+      cb(result);
+    });
+  },
+  // function used to create burger choice
+  insertOne: function(table, cols, vals, cb) {
+    var queryString = "INSERT INTO " + table;
 
-    // Test it
-    // console.log('The solution is: ', data);
+    queryString += " (";
+    queryString += cols.toString();
+    queryString += ") ";
+    queryString += "VALUES (";
+    queryString += printQuestionMarks(vals.length);
+    queryString += ") ";
 
-    // Test it
-    // res.send(data);
+    console.log(queryString);
 
-    res.render("index", { tasks: data });
-  });
-});
+    connection.query(queryString, vals, function(err, result) {
+      if (err) {
+        throw err;
+      }
+      cb(result);
+    });
+  },
+  // function used to update burger choice
+  updateOne: function(table, objColVals, condition, cb) {
+    var queryString = "UPDATE " + table;
+
+    queryString += " SET ";
+    queryString += objToSql(objColVals);
+    queryString += " WHERE ";
+    queryString += condition;
+
+    console.log(queryString);
+    connection.query(queryString, function(err, result) {
+      if (err) {
+        throw err;
+      }
+
+      cb(result);
+    });
+  },
+  // function used to delete burger choice
+  deleteOne: function(table, cols, vals, cb) {
+    const queryString = "DELETE FROM ${table} WHERE ${cols} = ${vals}";
+    console.log(queryString);
+
+    connection.query(queryString, function(err, result) {
+      if (err) {
+        throw err;
+      }
+
+      cb(result);
+    });
+  }
 }
+  
+
+// Export the orm object for the model (burger.js).
+module.exports = orm;
+
